@@ -2,7 +2,7 @@ import {defaultExpensifyCardSelector} from '@selectors/Card';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import type {OnyxEntry} from 'react-native-onyx';
 import {areAllGroupPoliciesExpenseChatDisabled} from '@libs/PolicyUtils';
-import {createTypeMenuSections} from '@libs/SearchUIUtils';
+import {createTypeMenuSections, GENERIC_SEARCH_KEYS} from '@libs/SearchUIUtils';
 import ONYXKEYS from '@src/ONYXKEYS';
 import type {NonPersonalAndWorkspaceCardListDerivedValue, Policy, Session} from '@src/types/onyx';
 import useCardFeedsForDisplay from './useCardFeedsForDisplay';
@@ -46,6 +46,8 @@ const currentUserLoginAndAccountIDSelector = (session: OnyxEntry<Session>) => ({
 type UseSearchTypeMenuSectionsParams = {
     hash?: number;
     similarSearchHash?: number;
+    sortBy?: string;
+    sortOrder?: string;
 };
 
 /**
@@ -53,7 +55,7 @@ type UseSearchTypeMenuSectionsParams = {
  * currently focused search, based on the hash
  */
 const useSearchTypeMenuSections = (queryParams?: UseSearchTypeMenuSectionsParams) => {
-    const {hash, similarSearchHash} = queryParams ?? {};
+    const {hash, similarSearchHash, sortBy, sortOrder} = queryParams ?? {};
     const {translate} = useLocalize();
     const cardSelector = useCallback((allCards: OnyxEntry<NonPersonalAndWorkspaceCardListDerivedValue>) => defaultExpensifyCardSelector(allCards, translate), [translate]);
     const [defaultExpensifyCard] = useOnyx(ONYXKEYS.DERIVED.NON_PERSONAL_AND_WORKSPACE_CARD_LIST, {selector: cardSelector}, [cardSelector]);
@@ -137,14 +139,22 @@ const useSearchTypeMenuSections = (queryParams?: UseSearchTypeMenuSectionsParams
 
         let index = 0;
         for (const section of typeMenuSections) {
-            const found = section.menuItems.findIndex((item) => item.similarSearchHash === similarSearchHash);
+            const found = section.menuItems.findIndex((item) => {
+                if (item.similarSearchHash !== similarSearchHash) {
+                    return false;
+                }
+                if (!GENERIC_SEARCH_KEYS.has(item.key) && (item.searchQueryJSON?.sortBy !== sortBy || item.searchQueryJSON?.sortOrder !== sortOrder)) {
+                    return false;
+                }
+                return true;
+            });
             if (found !== -1) {
                 return index + found;
             }
             index += section.menuItems.length;
         }
         return -1;
-    }, [typeMenuSections, savedSearches, hash, similarSearchHash]);
+    }, [typeMenuSections, savedSearches, hash, similarSearchHash, sortBy, sortOrder]);
 
     return {
         typeMenuSections,

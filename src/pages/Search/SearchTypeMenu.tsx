@@ -30,12 +30,12 @@ type SearchTypeMenuProps = {
 };
 
 function SearchTypeMenu({queryJSON}: SearchTypeMenuProps) {
-    const {hash, similarSearchHash} = queryJSON ?? {};
+    const {hash, similarSearchHash, sortBy, sortOrder} = queryJSON ?? {};
 
     const styles = useThemeStyles();
     const {singleExecution} = useSingleExecution();
     const {translate} = useLocalize();
-    const {typeMenuSections, CreateReportConfirmationModal, shouldShowSuggestedSearchSkeleton, activeItemIndex} = useSearchTypeMenuSections({hash, similarSearchHash});
+    const {typeMenuSections, CreateReportConfirmationModal, shouldShowSuggestedSearchSkeleton, activeItemIndex} = useSearchTypeMenuSections({hash, similarSearchHash, sortBy, sortOrder});
     const expensifyIcons = useMemoizedLazyExpensifyIcons([
         'Basket',
         'CalendarSolid',
